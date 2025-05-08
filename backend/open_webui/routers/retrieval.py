@@ -1182,6 +1182,12 @@ def process_file(
                 "filename": file.filename,
                 "content": text_content,
             }
+        Files.update_file_metadata_by_id(
+            file.id,
+            {
+                "processed": True,
+            },
+        )
 
     except Exception as e:
         log.exception(e)

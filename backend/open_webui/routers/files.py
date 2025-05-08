@@ -8,6 +8,7 @@ from urllib.parse import quote
 
 from fastapi import (
     APIRouter,
+    BackgroundTasks,
     Depends,
     File,
     HTTPException,
@@ -79,10 +80,16 @@ def has_access_to_file(
 # Upload File
 ############################
 
+def transcribe_file_in_bg(request: Request, file_path:str, user):
+    result = transcribe(request, file_path)
+    process_file(request,
+                 ProcessFileForm(file_id=id, content=result.get("text", "")),
+                 user=user)
 
 @router.post("/", response_model=FileModelResponse)
 def upload_file(
     request: Request,
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     user=Depends(get_verified_user),
     file_metadata: dict = None,
@@ -119,6 +126,7 @@ def upload_file(
                         "content_type": file.content_type,
                         "size": len(contents),
                         "data": file_metadata,
+                        "processed": not (process)
                     },
                 }
             ),
@@ -136,13 +144,8 @@ def upload_file(
                     )
                 ):
                     file_path = Storage.get_file(file_path)
-                    result = transcribe(request, file_path)
+                    background_tasks.add_task(transcribe_file_in_bg, request, file_path, user)
 
-                    process_file(
-                        request,
-                        ProcessFileForm(file_id=id, content=result.get("text", "")),
-                        user=user,
-                    )
                 elif file.content_type not in [
                     "image/png",
                     "image/jpeg",
@@ -152,7 +155,7 @@ def upload_file(
                     "video/quicktime",
                     "video/webm",
                 ]:
-                    process_file(request, ProcessFileForm(file_id=id), user=user)
+                    background_tasks.add_task(process_file,request, ProcessFileForm(file_id=id), user=user)
 
                 file_item = Files.get_file_by_id(id=id)
             except Exception as e:
@@ -323,6 +326,33 @@ async def get_file_data_content_by_id(id: str, user=Depends(get_verified_user)):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
+############################
+# Get File Metadata Content By Id
+############################
+
+
+@router.get("/{id}/data/meta")
+async def get_file_meta_by_id(id: str, user=Depends(get_verified_user)):
+    file = Files.get_file_by_id(id)
+
+    if not file:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
+
+    if (
+        file.user_id == user.id
+        or user.role == "admin"
+        or has_access_to_file(id, "read", user)
+    ):
+        return {"meta": file.data.get("meta", "")}
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
+
 
 
 ############################

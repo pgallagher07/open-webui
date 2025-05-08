@@ -13,7 +13,7 @@
 	import RichTextInput from '../common/RichTextInput.svelte';
 	import VoiceRecording from '../chat/MessageInput/VoiceRecording.svelte';
 	import InputMenu from './MessageInput/InputMenu.svelte';
-	import { uploadFile } from '$lib/apis/files';
+	import { uploadFile,getFileById,getFileMetaById} from '$lib/apis/files';
 	import { WEBUI_API_BASE_URL } from '$lib/constants';
 	import FileItem from '../common/FileItem.svelte';
 	import Image from '../common/Image.svelte';
@@ -160,14 +160,32 @@
 
 		try {
 			// During the file upload, file content is automatically extracted.
-			const uploadedFile = await uploadFile(localStorage.token, file);
-
+			let uploadedFile = await uploadFile(localStorage.token, file);
+			let metadata;
 			if (uploadedFile) {
 				console.log('File upload completed:', {
 					id: uploadedFile.id,
 					name: fileItem.name,
 					collection: uploadedFile?.meta?.collection_name
 				});
+
+			if (!uploadedFile?.meta?.processed) {
+				let processComplete = false;
+				while (!processComplete) {
+					await new Promise(r => setTimeout(r, 10000));
+					try {
+						metadata = await getFileMetaById(localStorage.token, uploadedFile.id);
+						if (metadata.meta?.processed) {
+							processComplete = true;
+							uploadedFile = await getFileById(localStorage.token, uploadedFile.id);
+						}
+					} catch (e) {
+						toast.error($i18n.t('Failed to process file.'));
+						processComplete = true;
+					}
+				}
+
+			}
 
 				if (uploadedFile.error) {
 					console.warn('File upload warning:', uploadedFile.error);

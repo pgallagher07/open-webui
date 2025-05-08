@@ -180,6 +180,34 @@ export const getFileContentById = async (id: string) => {
 	return res;
 };
 
+export const getFileMetaById = async (id: string) => {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/files/${id}/meta`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json'
+		},
+		credentials: 'include'
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return await res.blob();
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.log(err);
+
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
+};
+
 export const deleteFileById = async (token: string, id: string) => {
 	let error = null;
 
