@@ -1164,6 +1164,7 @@ def process_file(
                         file.id,
                         {
                             "collection_name": collection_name,
+                             "processed": True,
                         },
                     )
 
@@ -1176,6 +1177,12 @@ def process_file(
             except Exception as e:
                 raise e
         else:
+            Files.update_file_metadata_by_id(
+                file.id,
+                {
+                    "processed": True,
+                },
+        )
             return {
                 "status": True,
                 "collection_name": None,
@@ -1190,6 +1197,16 @@ def process_file(
         )
 
     except Exception as e:
+        try:
+            Files.update_file_metadata_by_id(
+                file.id,
+                {
+                    "processed": True,
+                },
+            )
+        except Exception as e2:
+            log.exception(e2)
+        
         log.exception(e)
         if "No pandoc was found" in str(e):
             raise HTTPException(

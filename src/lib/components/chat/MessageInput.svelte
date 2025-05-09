@@ -194,7 +194,7 @@
 			// During the file upload, file content is automatically extracted.
 			let uploadedFile = await uploadFile(localStorage.token, file);
 			let metadata;
-			if (uploadedFile) {
+			if (uploadedFile) { 
 				console.log('File upload completed:', {
 					id: uploadedFile.id,
 					name: fileItem.name,

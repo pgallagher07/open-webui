@@ -390,7 +390,7 @@ async def get_file_meta_by_id(id: str, user=Depends(get_verified_user)):
         or user.role == "admin"
         or has_access_to_file(id, "read", user)
     ):
-        return {"meta": file.get("meta", "")}
+        return {"meta": file.meta}
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
