@@ -326,34 +326,6 @@ async def get_file_data_content_by_id(id: str, user=Depends(get_verified_user)):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
-############################
-# Get File Metadata Content By Id
-############################
-
-
-@router.get("/{id}/meta")
-async def get_file_meta_by_id(id: str, user=Depends(get_verified_user)):
-    file = Files.get_file_by_id(id)
-
-    if not file:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
-
-    if (
-        file.user_id == user.id
-        or user.role == "admin"
-        or has_access_to_file(id, "read", user)
-    ):
-        return {"meta": file.data.get("meta", "")}
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
-
-
 
 ############################
 # Update File Data Content By Id
@@ -399,11 +371,36 @@ async def update_file_data_content_by_id(
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
+############################
+# Get File Metadata Content By Id
+############################
+
+@router.get("/{id}/meta")
+async def get_file_meta_by_id(id: str, user=Depends(get_verified_user)):
+    file = Files.get_file_by_id(id)
+
+    if not file:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
+
+    if (
+        file.user_id == user.id
+        or user.role == "admin"
+        or has_access_to_file(id, "read", user)
+    ):
+        return {"meta": file.get("meta", "")}
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
+
 
 ############################
 # Get File Content By Id
 ############################
-
 
 @router.get("/{id}/content")
 async def get_file_content_by_id(
