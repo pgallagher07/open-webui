@@ -331,7 +331,7 @@ async def get_file_data_content_by_id(id: str, user=Depends(get_verified_user)):
 ############################
 
 
-@router.get("/{id}/data/meta")
+@router.get("/{id}/meta")
 async def get_file_meta_by_id(id: str, user=Depends(get_verified_user)):
     file = Files.get_file_by_id(id)
 

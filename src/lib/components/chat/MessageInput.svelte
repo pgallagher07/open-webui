@@ -28,7 +28,7 @@
 		extractCurlyBraceWords
 	} from '$lib/utils';
 	import { transcribeAudio } from '$lib/apis/audio';
-	import { uploadFile } from '$lib/apis/files';
+	import { uploadFile,getFileById,getFileMetaById} from '$lib/apis/files';
 	import { generateAutoCompletion } from '$lib/apis';
 	import { deleteFileById } from '$lib/apis/files';
 
@@ -192,14 +192,31 @@
 
 		try {
 			// During the file upload, file content is automatically extracted.
-			const uploadedFile = await uploadFile(localStorage.token, file);
-
+			let uploadedFile = await uploadFile(localStorage.token, file);
+			let metadata;
 			if (uploadedFile) {
 				console.log('File upload completed:', {
 					id: uploadedFile.id,
 					name: fileItem.name,
 					collection: uploadedFile?.meta?.collection_name
 				});
+
+			if (!uploadedFile?.meta?.processed) {
+				let processComplete = false;
+				while (!processComplete) {
+					await new Promise(r => setTimeout(r, 10000));
+					try {
+						metadata = await getFileMetaById(localStorage.token, uploadedFile.id);
+						if (metadata.meta?.processed) {
+							processComplete = true;
+							uploadedFile = await getFileById(localStorage.token, uploadedFile.id);
+						}
+					} catch (e) {
+						toast.error(`${e}`);
+						processComplete = true;
+					}
+				}
+			}
 
 				if (uploadedFile.error) {
 					console.warn('File upload warning:', uploadedFile.error);
