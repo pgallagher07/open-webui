@@ -174,7 +174,7 @@
 				while (!processComplete) {
 					await new Promise(r => setTimeout(r, 10000));
 					try {
-						metadata = await getFileMetaById(localStorage.token, uploadedFile.id);
+						metadata = await getFileMetaById(uploadedFile.id);
 						if (metadata.meta?.processed) {
 							processComplete = true;
 							uploadedFile = await getFileById(localStorage.token, uploadedFile.id);
