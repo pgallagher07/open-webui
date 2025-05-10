@@ -1134,7 +1134,6 @@ def process_file(
                     )
                 ]
             text_content = " ".join([doc.page_content for doc in docs])
-
         log.debug(f"text_content: {text_content}")
         Files.update_file_data_by_id(
             file.id,
@@ -1195,7 +1194,6 @@ def process_file(
                 "processed": True,
             },
         )
-
     except Exception as e:
         try:
             Files.update_file_metadata_by_id(

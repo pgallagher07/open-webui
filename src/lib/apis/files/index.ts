@@ -192,7 +192,7 @@ export const getFileMetaById = async (id: string) => {
 	})
 		.then(async (res) => {
 			if (!res.ok) throw await res.json();
-			return await res.blob();
+			return await res.json();
 		})
 		.catch((err) => {
 			error = err.detail;

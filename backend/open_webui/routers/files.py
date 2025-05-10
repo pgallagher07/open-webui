@@ -80,7 +80,7 @@ def has_access_to_file(
 # Upload File
 ############################
 
-def transcribe_file_in_bg(request: Request, file_path:str, user):
+def transcribe_file_in_bg(request: Request, file_path:str, id:str, user):
     result = transcribe(request, file_path)
     process_file(request,
                  ProcessFileForm(file_id=id, content=result.get("text", "")),
@@ -144,7 +144,7 @@ def upload_file(
                     )
                 ):
                     file_path = Storage.get_file(file_path)
-                    background_tasks.add_task(transcribe_file_in_bg, request, file_path, user)
+                    background_tasks.add_task(transcribe_file_in_bg, request, file_path, id, user)
 
                 elif file.content_type not in [
                     "image/png",
